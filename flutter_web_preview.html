@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EchoCall - Preview</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+            background: #000;
+            color: white;
+            overflow: hidden;
+        }
+        
+        .phone-container {
+            width: 375px;
+            height: 812px;
+            margin: 20px auto;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+            border-radius: 40px;
+            border: 8px solid #333;
+            overflow: hidden;
+        }
+        
+        .call-screen {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background: linear-gradient(135deg, #1a1a1a, #2a2a2a);
+        }
+        
+        .background-blur {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><circle cx="50" cy="50" r="40" fill="%23007AFF" opacity="0.3"/></svg>');
+            filter: blur(20px);
+            opacity: 0.6;
+        }
+        
+        .content {
+            position: relative;
+            z-index: 1;
+            padding: 60px 24px 40px;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .status-text {
+            text-align: center;
+            color: rgba(255,255,255,0.7);
+            font-size: 15px;
+            margin-bottom: 16px;
+            animation: fadeIn 0.5s ease-out;
+        }
+        
+        .caller-name {
+            text-align: center;
+            font-size: 28px;
+            font-weight: 300;
+            margin-bottom: 8px;
+            animation: slideUp 0.6s ease-out;
+        }
+        
+        .caller-number {
+            text-align: center;
+            color: rgba(255,255,255,0.6);
+            font-size: 17px;
+            margin-bottom: 60px;
+            animation: fadeIn 0.7s ease-out;
+        }
+        
+        .avatar-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            animation: scaleIn 0.8s ease-out;
+        }
+        
+        .avatar {
+            width: 200px;
+            height: 200px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #007AFF, #5AC8FA);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 80px;
+            font-weight: 600;
+            color: white;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.3);
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        .waveform {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 4px;
+            margin: 20px 0;
+            height: 60px;
+        }
+        
+        .wave-bar {
+            width: 4px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 2px;
+            animation: wave 1s ease-in-out infinite;
+        }
+        
+        .wave-bar:nth-child(1) { height: 20px; animation-delay: 0s; }
+        .wave-bar:nth-child(2) { height: 40px; animation-delay: 0.1s; }
+        .wave-bar:nth-child(3) { height: 60px; animation-delay: 0.2s; }
+        .wave-bar:nth-child(4) { height: 40px; animation-delay: 0.3s; }
+        .wave-bar:nth-child(5) { height: 20px; animation-delay: 0.4s; }
+        
+        .controls {
+            display: flex;
+            flex-direction: column;
+            gap: 32px;
+            animation: slideUp 0.9s ease-out;
+        }
+        
+        .control-row {
+            display: flex;
+            justify-content: space-evenly;
+            gap: 20px;
+        }
+        
+        .control-button {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: 1px solid rgba(255,255,255,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .control-button:hover {
+            background: rgba(255,255,255,0.3);
+            transform: scale(1.05);
+        }
+        
+        .control-button.active {
+            background: white;
+            color: black;
+        }
+        
+        .end-call-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: #FF3B30;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            margin: 0 auto;
+            transition: all 0.2s ease;
+        }
+        
+        .end-call-button:hover {
+            background: #d70015;
+            transform: scale(1.05);
+        }
+        
+        .call-timer {
+            text-align: center;
+            font-size: 17px;
+            color: white;
+            margin-bottom: 20px;
+            font-family: 'SF Mono', monospace;
+        }
+        
+        .incoming-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 2;
+        }
+        
+        .answer-decline {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+        }
+        
+        .decline-button, .answer-button {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 32px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .decline-button {
+            background: #FF3B30;
+        }
+        
+        .answer-button {
+            background: #34C759;
+        }
+        
+        .preview-info {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 20px;
+            border-radius: 12px;
+            backdrop-filter: blur(10px);
+            max-width: 300px;
+        }
+        
+        .preview-info h3 {
+            color: #007AFF;
+            margin-bottom: 10px;
+        }
+        
+        .demo-controls {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .demo-button {
+            padding: 10px 20px;
+            background: #007AFF;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .demo-button:hover {
+            background: #0056b3;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        @keyframes scaleIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        @keyframes wave {
+            0%, 100% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="preview-info">
+        <h3>📱 EchoCall Preview</h3>
+        <p>This is a visual preview of the iOS call screen. The actual Flutter app includes:</p>
+        <ul>
+            <li>Real haptic feedback</li>
+            <li>AI voice generation</li>
+            <li>Audio recording</li>
+            <li>Social sharing</li>
+            <li>Cross-platform support</li>
+        </ul>
+    </div>
+    
+    <div class="demo-controls">
+        <button class="demo-button" onclick="showIncoming()">📞 Incoming Call</button>
+        <button class="demo-button" onclick="showActive()">🗣️ Active Call</button>
+        <button class="demo-button" onclick="toggleCaller()">👤 Change Caller</button>
+    </div>
+    
+    <div class="phone-container">
+        <div class="call-screen">
+            <div class="background-blur"></div>
+            
+            <div class="content">
+                <div class="status-text" id="statusText">Incoming call</div>
+                <div class="caller-name" id="callerName">Sarah Wilson</div>
+                <div class="caller-number" id="callerNumber">+1 (555) 123-4567</div>
+                
+                <div class="avatar-container">
+                    <div class="avatar" id="avatar">SW</div>
+                </div>
+                
+                <div class="waveform" id="waveform" style="display: none;">
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                    <div class="wave-bar"></div>
+                </div>
+                
+                <div class="call-timer" id="callTimer" style="display: none;">02:34</div>
+                
+                <div class="controls" id="activeControls" style="display: none;">
+                    <div class="control-row">
+                        <div class="control-button" onclick="toggleMute()">🎤</div>
+                        <div class="control-button">⌨️</div>
+                        <div class="control-button" onclick="toggleSpeaker()">🔊</div>
+                    </div>
+                    <div class="control-row">
+                        <div class="control-button">➕</div>
+                        <div class="control-button">📹</div>
+                        <div class="control-button">👥</div>
+                    </div>
+                    <div class="end-call-button" onclick="endCall()">📞</div>
+                </div>
+            </div>
+            
+            <div class="incoming-overlay" id="incomingOverlay">
+                <div class="answer-decline">
+                    <div class="decline-button" onclick="declineCall()">📞</div>
+                    <div class="answer-button" onclick="answerCall()">📞</div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        let isActive = false;
+        let callerIndex = 0;
+        const callers = [
+            { name: 'Sarah Wilson', number: '+1 (555) 123-4567', initials: 'SW' },
+            { name: 'Mom', number: '+1 (555) 987-6543', initials: 'M' },
+            { name: 'John Doe', number: '+1 (555) 456-7890', initials: 'JD' },
+            { name: 'Work Contact', number: '+1 (555) 111-2222', initials: 'WC' }
+        ];
+        
+        function showIncoming() {
+            isActive = false;
+            document.getElementById('statusText').textContent = 'Incoming call';
+            document.getElementById('incomingOverlay').style.display = 'flex';
+            document.getElementById('activeControls').style.display = 'none';
+            document.getElementById('waveform').style.display = 'none';
+            document.getElementById('callTimer').style.display = 'none';
+        }
+        
+        function showActive() {
+            isActive = true;
+            document.getElementById('statusText').textContent = 'Connected';
+            document.getElementById('incomingOverlay').style.display = 'none';
+            document.getElementById('activeControls').style.display = 'flex';
+            document.getElementById('waveform').style.display = 'flex';
+            document.getElementById('callTimer').style.display = 'block';
+        }
+        
+        function answerCall() {
+            showActive();
+        }
+        
+        function declineCall() {
+            alert('Call declined');
+        }
+        
+        function endCall() {
+            alert('Call ended');
+            showIncoming();
+        }
+        
+        function toggleCaller() {
+            callerIndex = (callerIndex + 1) % callers.length;
+            const caller = callers[callerIndex];
+            document.getElementById('callerName').textContent = caller.name;
+            document.getElementById('callerNumber').textContent = caller.number;
+            document.getElementById('avatar').textContent = caller.initials;
+        }
+        
+        function toggleMute() {
+            const button = event.target;
+            button.classList.toggle('active');
+            button.textContent = button.classList.contains('active') ? '🎤' : '🔇';
+        }
+        
+        function toggleSpeaker() {
+            const button = event.target;
+            button.classList.toggle('active');
+            button.textContent = button.classList.contains('active') ? '🔊' : '🔉';
+        }
+        
+        // Initialize
+        showIncoming();
+    </script>
+</body>
+</html>
